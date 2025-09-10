@@ -3,7 +3,7 @@ import { InjectModel } from '@nestjs/sequelize';
 import { Transaction } from 'sequelize';
 import { Location } from '../../database/models/location.model';
 import { User } from '../../database/models/user.model';
-import { Patient } from '../../database/models/patient.model';
+import { CareReceiver } from '../../database/models/care-receiver.model.';
 import { RoomBed } from '../../database/models/room-bed.model';
 import { AuditLog } from '../../database/models/audit-log.model';
 import { CreateLocationDto } from './dto/create-location.dto';
@@ -17,8 +17,8 @@ export class LocationsService {
     private readonly locationModel: typeof Location,
     @InjectModel(User)
     private readonly userModel: typeof User,
-    @InjectModel(Patient)
-    private readonly patientModel: typeof Patient,
+    @InjectModel(CareReceiver)
+    private readonly patientModel: typeof CareReceiver,
     @InjectModel(RoomBed)
     private readonly roomBedModel: typeof RoomBed,
     @InjectModel(AuditLog)

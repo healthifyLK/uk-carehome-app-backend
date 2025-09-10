@@ -4,7 +4,7 @@ import { SequelizeModule } from '@nestjs/sequelize';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { User } from './models/user.model';
 import { Location } from './models/location.model';
-import { Patient } from './models/patient.model';
+import { Patient } from './models/care-receiver.model.';
 import { RoomBed } from './models/room-bed.model';
 import { Assignment } from './models/assignment.model';
 import { Schedule } from './models/schedule.model';

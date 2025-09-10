@@ -8,7 +8,7 @@ import {
   } from 'sequelize-typescript';
   import { BaseModel } from './base.model';
   import { Location } from './location.model';
-  import { Patient } from './patient.model';
+  import { CareReceiver } from './care-receiver.model.';
   
   @Table({
     tableName: 'room_beds',
@@ -67,6 +67,6 @@ import {
     @BelongsTo(() => Location)
     location: Location;
   
-    @HasMany(() => Patient, 'currentRoomBedId')
-    currentPatients: Patient[];
+    @HasMany(() => CareReceiver, 'currentRoomBedId')
+    currentPatients: CareReceiver[];
   }

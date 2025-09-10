@@ -10,7 +10,7 @@ import {
   } from 'sequelize-typescript';
   import { BaseModel } from './base.model';
   import { User } from './user.model';
-  import { Patient } from './patient.model';
+  import { CareReceiver } from './care-receiver.model.';
   import { Schedule } from './schedule.model';
   
   export enum AssignmentType {
@@ -37,7 +37,7 @@ import {
     })
     caregiverId: string;
   
-    @ForeignKey(() => Patient)
+    @ForeignKey(() => CareReceiver)
     @Column({
       type: DataType.UUID,
       allowNull: false,
@@ -85,8 +85,8 @@ import {
     @BelongsTo(() => User)
     caregiver: User;
   
-    @BelongsTo(() => Patient)
-    patient: Patient;
+    @BelongsTo(() => CareReceiver)
+    patient: CareReceiver;
   
     @BelongsTo(() => Schedule)
     schedule: Schedule;
