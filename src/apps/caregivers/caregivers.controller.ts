@@ -45,7 +45,7 @@ import { CareReceiverRegistrationDto } from '../patients/dto/care-receiver-regis
     async registerCaregiver(
       @Body() registrationData: CaregiverRegistrationDto,
       @Request() req,
-    ): Promise<CareReceiverResponseDto> {
+    ): Promise<CaregiverResponseDto> {
       return this.caregiversService.registerCaregiver(
         registrationData,
         req.user.id,
@@ -63,7 +63,7 @@ import { CareReceiverRegistrationDto } from '../patients/dto/care-receiver-regis
     })
     async getAllCaregivers(
       @Query('locationId') locationId?: string,
-    ): Promise<CareReceiverResponseDto[]> {
+    ): Promise<CaregiverResponseDto[]> {
       return this.caregiversService.getAllCaregivers(locationId);
     }
   
@@ -76,7 +76,7 @@ import { CareReceiverRegistrationDto } from '../patients/dto/care-receiver-regis
       type: CaregiverResponseDto,
     })
     @ApiResponse({ status: 404, description: 'Caregiver not found' })
-    async getCaregiver(@Param('id') caregiverId: string): Promise<CareReceiverResponseDto> {
+    async getCaregiver(@Param('id') caregiverId: string): Promise<CaregiverResponseDto> {
       return this.caregiversService.getCaregiverById(caregiverId);
     }
   
@@ -91,9 +91,9 @@ import { CareReceiverRegistrationDto } from '../patients/dto/care-receiver-regis
     @ApiResponse({ status: 404, description: 'Caregiver not found' })
     async updateCaregiver(
       @Param('id') caregiverId: string,
-      @Body() updateData: Partial<CareReceiverRegistrationDto>,
+      @Body() updateData: Partial<CaregiverRegistrationDto>,
       @Request() req,
-    ): Promise<CareReceiverResponseDto> {
+    ): Promise<CaregiverResponseDto> {
       return this.caregiversService.updateCaregiver(
         caregiverId,
         updateData,
@@ -114,7 +114,7 @@ import { CareReceiverRegistrationDto } from '../patients/dto/care-receiver-regis
       @Param('id') caregiverId: string,
       @Body() body: { status: CaregiverStatus },
       @Request() req,
-    ): Promise<CareReceiverResponseDto> {
+    ): Promise<CaregiverResponseDto> {
       return this.caregiversService.updateStatus(
         caregiverId,
         body.status,
