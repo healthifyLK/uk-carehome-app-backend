@@ -11,6 +11,7 @@ import { RoomBedsModule } from './apps/rooms/rooms.module';
 import databaseConfig from './config/database.config';
 import { UsersModule } from './apps/users/users.module';
 import { CaregiversModule } from './apps/caregivers/caregivers.module';
+import { RostersModule } from './apps/rosters/rosters.module';
 
 @Module({
   imports: [
@@ -25,7 +26,8 @@ import { CaregiversModule } from './apps/caregivers/caregivers.module';
     LocationsModule,
     RoomBedsModule,
     UsersModule,
-    CaregiversModule
+    CaregiversModule,
+    RostersModule
   ],
   controllers: [AppController],
   providers: [AppService],

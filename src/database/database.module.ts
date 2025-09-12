@@ -9,6 +9,7 @@ import { RoomBed } from './models/room-bed.model';
 import { Assignment } from './models/assignment.model';
 import { Schedule } from './models/schedule.model';
 import { AuditLog } from './models/audit-log.model';
+import { Caregiver } from './models';
 
 @Module({
   imports: [
@@ -16,7 +17,7 @@ import { AuditLog } from './models/audit-log.model';
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
         ...configService.get('database'),
-        models: [User, Location, CareReceiver, RoomBed, Assignment, Schedule, AuditLog],
+        models: [User, Location, CareReceiver, RoomBed, Assignment, Schedule,AuditLog, Caregiver],
         autoLoadModels: true,
         synchronize: process.env.NODE_ENV === 'development',
         logging: false, // Fix the deprecation warning

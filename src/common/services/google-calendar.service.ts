@@ -1,60 +1,78 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { google } from 'googleapis';
 import { ConfigService } from '@nestjs/config';
+import * as fs from 'fs';
 
 @Injectable()
 export class GoogleCalendarService {
   private readonly logger = new Logger(GoogleCalendarService.name);
   private calendar: any;
+  private isConfigured = false;
 
   constructor(private configService: ConfigService) {
     this.initializeCalendar();
   }
 
-  private initializeCalendar() {  
-    const auth = new google.auth.GoogleAuth({
-      credentials: {
-        client_email: this.configService.get('GOOGLE_CLIENT_EMAIL'),
-        private_key: this.configService.get('GOOGLE_PRIVATE_KEY')?.replace(/\\n/g, '\n'),
-      },
-      scopes: ['https://www.googleapis.com/auth/calendar'],
-    });
+  private initializeCalendar() {
+    const keyFile = this.configService.get<string>('GOOGLE_CREDENTIALS_PATH') || process.env.GOOGLE_APPLICATION_CREDENTIALS;
+    const subject = this.configService.get<string>('GOOGLE_IMPERSONATE_SUBJECT');
+    const scopes = ['https://www.googleapis.com/auth/calendar'];
 
-    this.calendar = google.calendar({ version: 'v3', auth });
+    try {
+      let client_email: string | undefined;
+      let private_key: string | undefined;
+
+      if (keyFile && fs.existsSync(keyFile)) {
+        const raw = JSON.parse(fs.readFileSync(keyFile, 'utf8'));
+        client_email = raw.client_email;
+        private_key = raw.private_key;
+      } else {
+        client_email = this.configService.get<string>('GOOGLE_CLIENT_EMAIL');
+        private_key = this.configService.get<string>('GOOGLE_PRIVATE_KEY')?.replace(/\\n/g, '\n');
+      }
+
+      if (!client_email || !private_key || !subject) {
+        this.logger.warn('Missing GOOGLE_CREDENTIALS_PATH/CLIENT_EMAIL/PRIVATE_KEY or GOOGLE_IMPERSONATE_SUBJECT.');
+        return;
+      }
+
+      const jwt = new google.auth.JWT({
+        email: client_email,
+        key: private_key,
+        scopes,
+        subject, // DWD impersonation
+      });
+
+      this.calendar = google.calendar({ version: 'v3', auth: jwt });
+      this.isConfigured = true;
+      this.logger.log(`Google Calendar initialized with DWD for subject: ${subject}`);
+    } catch (err: any) {
+      this.logger.error('Failed to initialize Google Calendar:', err?.message || err);
+    }
   }
 
   async createEvent(eventData: {
     summary: string;
-    description?: string;
     start: { dateTime: string; timeZone: string };
     end: { dateTime: string; timeZone: string };
+    description?: string;
     attendees?: { email: string }[];
     location?: string;
   }): Promise<string> {
-    try {
-      const calendarId = this.configService.get('GOOGLE_CALENDAR_ID');
-      
-      const response = await this.calendar.events.insert({
-        calendarId,
-        resource: {
-          ...eventData, 
-          reminders: {
-            useDefault: false,
-            overrides: [
-              { method: 'email', minutes: 24 * 60 }, // 24 hours before
-              { method: 'popup', minutes: 60 }, // 1 hour before
-            ],
-          },
-        },
-      });
-
-      this.logger.log(`Created Google Calendar event: ${response.data.id}`);
-      return response.data.id;
-    } catch (error) {
-      this.logger.error('Failed to create Google Calendar event:', error);
-      throw error;
+    if (!this.isConfigured) {
+      this.logger.warn('Google Calendar not configured. Skipping event creation.');
+      return 'mock-event-id-' + Date.now();
     }
+    const calendarId = this.configService.get<string>('GOOGLE_CALENDAR_ID') || 'primary';
+    const res = await this.calendar.events.insert({
+      calendarId,
+      resource: eventData,
+    });
+    return res.data.id as string;
   }
+
+
+
 
   async updateEvent(eventId: string, eventData: any): Promise<void> {
     try {
@@ -107,4 +125,5 @@ export class GoogleCalendarService {
       throw error;
     }
   }
+
 }
