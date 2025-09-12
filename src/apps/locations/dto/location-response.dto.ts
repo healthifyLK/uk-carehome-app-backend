@@ -2,10 +2,22 @@ import { Expose, Type } from 'class-transformer';
 
 export class LocationStatsDto {
   @Expose()
-  userCount: number;
+  totalBeds: number;
 
   @Expose()
-  patientCount: number;
+  occupiedBeds: number;
+
+  @Expose()
+  availableBeds: number;
+
+  @Expose()
+  caregiverCount: number;
+
+  @Expose()
+  careReceiverCount: number;
+
+  @Expose()
+  occupancyRate: number;
 }
 
 export class LocationResponseDto {

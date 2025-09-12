@@ -205,6 +205,7 @@ import {
   
     // Security & Compliance
     @ValidateNested()
+    @IsOptional()
     @Type(() => RightToWorkDocumentDto)
     rightToWorkDocument: RightToWorkDocumentDto;
   

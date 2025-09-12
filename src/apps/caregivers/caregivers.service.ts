@@ -239,6 +239,8 @@ export class CaregiversService {
     });
   }
 
+  
+
   private async generateEmployeeId(): Promise<string> {
     const prefix = 'CG';
     const timestamp = Date.now().toString().slice(-6);

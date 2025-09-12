@@ -1,34 +1,40 @@
-import { IsString, IsEmail, IsOptional, IsInt, IsBoolean, Min, MaxLength } from 'class-validator';
+import { IsString, IsOptional, IsNumber, IsBoolean, Min, Max } from 'class-validator';
 
 export class CreateLocationDto {
   @IsString()
-  @MaxLength(100)
   name: string;
 
   @IsString()
-  @MaxLength(500)
   address: string;
 
   @IsString()
   @IsOptional()
-  @MaxLength(50)
   city?: string;
 
   @IsString()
   @IsOptional()
-  @MaxLength(10)
   postcode?: string;
 
   @IsString()
   @IsOptional()
   phoneNumber?: string;
 
-  @IsEmail()
+  @IsString()
   @IsOptional()
   email?: string;
 
-  @IsInt()
-  @Min(0)
+  @IsNumber()
+  @IsOptional()
+  @Min(1)
+  numberOfRooms?: number;
+
+  @IsNumber()
+  @IsOptional()
+  @Min(1)
+  @Max(26) // A-Z
+  bedsPerRoom?: number;
+
+  @IsNumber()
   @IsOptional()
   capacity?: number;
 

@@ -243,7 +243,7 @@ import {
     // Security & Compliance
     @Column({
       type: DataType.JSONB,
-      allowNull: false,
+      allowNull: true,
       comment: 'Encrypted right to work documentation',
       get() {
         const value = this.getDataValue('rightToWorkDocument');
@@ -253,7 +253,7 @@ import {
         this.setDataValue('rightToWorkDocument', value ? encryptField(JSON.stringify(value)) : null);
       },
     })
-    rightToWorkDocument: any;
+    rightToWorkDocument?: any;
   
     @Column({
       type: DataType.JSONB,
@@ -311,6 +311,8 @@ import {
       comment: 'GDPR consent tracking',
     })
     consentHistory: object;
+
+    
   
     @Column({
       type: DataType.BOOLEAN,

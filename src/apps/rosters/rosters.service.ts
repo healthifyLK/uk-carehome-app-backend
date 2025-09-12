@@ -38,6 +38,9 @@ export class RostersService {
     userId: string,
     transaction?: Transaction,
   ): Promise<RosterResponseDto> {
+    console.log('Roster data',rosterData);
+    
+    
     // Validate caregiver exists
     const caregiver = await this.caregiverModel.findByPk(
       rosterData.caregiverId,
@@ -67,7 +70,7 @@ export class RostersService {
     const roster = await this.rosterModel.create(
       {
         ...rosterData,
-        status: rosterData.status || RosterStatus.DRAFT,
+        status: rosterData.status,
       },
       { transaction },
     );

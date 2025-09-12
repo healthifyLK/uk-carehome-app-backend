@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { Transaction } from 'sequelize';
+import { literal, type ProjectionAlias } from 'sequelize';
 import { Location } from '../../database/models/location.model';
 import { User } from '../../database/models/user.model';
 import { CareReceiver } from '../../database/models/care-receiver.model.';
@@ -33,7 +34,6 @@ export class LocationsService {
     userId: string,
     transaction?: Transaction,
   ): Promise<LocationResponseDto> {
-    // Check if location with same name already exists
     const existingLocation = await this.locationModel.findOne({
       where: { name: createLocationDto.name },
     });
@@ -42,24 +42,48 @@ export class LocationsService {
       throw new BadRequestException('Location with this name already exists');
     }
 
+    // Derive capacity if numbers provided
+    const numberOfRooms = createLocationDto.numberOfRooms ?? 0;
+    const bedsPerRoom = createLocationDto.bedsPerRoom ?? 0;
+    const capacity =
+      createLocationDto.capacity ??
+      (numberOfRooms > 0 && bedsPerRoom > 0 ? numberOfRooms * bedsPerRoom : 0);
+
     const location = await this.locationModel.create(
       {
         ...createLocationDto,
-        capacity: createLocationDto.capacity || 0,
+        capacity,
         isActive: createLocationDto.isActive !== undefined ? createLocationDto.isActive : true,
         settings: createLocationDto.settings || {},
       },
       { transaction },
     );
 
-    // Audit log
+    // Auto-generate rooms/beds if requested
+    if (numberOfRooms > 0 && bedsPerRoom > 0) {
+      const beds: { roomNumber: string; bedNumber: string; locationId: string }[] = [];
+      const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+      for (let r = 1; r <= numberOfRooms; r++) {
+        const roomNumber = String(r).padStart(3, '0'); // 001, 002, ...
+        for (let b = 0; b < bedsPerRoom; b++) {
+          const letter = letters[b];
+          beds.push({
+            roomNumber,
+            bedNumber: `CH${roomNumber}${letter}`, // matches model hook/validation
+            locationId: location.id,
+          });
+        }
+      }
+      await this.roomBedModel.bulkCreate(beds as any, { transaction });
+    }
+
     await this.auditLogModel.create(
       {
         action: 'CREATE',
         entityType: 'Location',
         entityId: location.id,
         userId: userId,
-        changes: { created: createLocationDto },
+        changes: { created: { ...createLocationDto, capacity, numberOfRooms, bedsPerRoom } },
         status: 'SUCCESS',
         purpose: 'Location Management',
       },
@@ -73,27 +97,78 @@ export class LocationsService {
    * Get all locations
    */
   async getAllLocations(includeStats: boolean = false): Promise<LocationResponseDto[]> {
-    const includeOptions = includeStats ? ['withStats'] : [];
-    
-    const locations = await this.locationModel.scope(includeOptions).findAll({
+    const projections: ProjectionAlias[] = includeStats
+      ? [
+          // Total beds count
+          [
+            literal(`(SELECT COUNT(1) FROM room_beds rb WHERE rb.location_id = "Location"."id")`),
+            'totalBeds',
+          ],
+          // Occupied beds count
+          [
+            literal(`(SELECT COUNT(1) FROM room_beds rb WHERE rb.location_id = "Location"."id" AND rb.is_occupied = true)`),
+            'occupiedBeds',
+          ],
+          // Active caregivers count
+          [
+            literal(`(SELECT COUNT(1) FROM caregivers c WHERE c.location_id = "Location"."id" AND c.status = 'ACTIVE')`),
+            'caregiverCount',
+          ],
+          // Active care receivers count
+          [
+            literal(`(SELECT COUNT(1) FROM care_receivers cr WHERE cr.location_id = "Location"."id" AND cr.status = 'ACTIVE')`),
+            'careReceiverCount',
+          ],
+        ]
+      : [];
+  
+    const attributes = includeStats ? { include: projections } : undefined;
+  
+    const locations = await this.locationModel.findAll({
+      attributes,
       order: [['name', 'ASC']],
     });
-
-    return locations.map(location => this.mapToResponseDto(location));
+  
+    return locations.map((location) => this.mapToResponseDto(location));
   }
 
   /**
    * Get location by ID
    */
   async getLocationById(locationId: string, includeStats: boolean = false): Promise<LocationResponseDto> {
-    const includeOptions = includeStats ? ['withStats'] : [];
-    
-    const location = await this.locationModel.scope(includeOptions).findByPk(locationId);
-
-    if (!location) {
+    const projections: ProjectionAlias[] = includeStats
+      ? [
+          // Total beds count
+          [
+            literal(`(SELECT COUNT(1) FROM room_beds rb WHERE rb.location_id = "Location"."id")`),
+            'totalBeds',
+          ],
+          // Occupied beds count
+          [
+            literal(`(SELECT COUNT(1) FROM room_beds rb WHERE rb.location_id = "Location"."id" AND rb.is_occupied = true)`),
+            'occupiedBeds',
+          ],
+          // Active caregivers count
+          [
+            literal(`(SELECT COUNT(1) FROM caregivers c WHERE c.location_id = "Location"."id" AND c.status = 'ACTIVE')`),
+            'caregiverCount',
+          ],
+          // Active care receivers count
+          [
+            literal(`(SELECT COUNT(1) FROM care_receivers cr WHERE cr.location_id = "Location"."id" AND cr.status = 'ACTIVE')`),
+            'careReceiverCount',
+          ],
+        ]
+      : [];
+  
+    const attributes = includeStats ? { include: projections } : undefined;
+  
+    const location = await this.locationModel.findByPk(locationId, { attributes });
+  
+    if (!location) { 
       throw new NotFoundException('Location not found');
     }
-
+  
     return this.mapToResponseDto(location);
   }
 
@@ -252,6 +327,16 @@ export class LocationsService {
    * Map Location model to response DTO
    */
   private mapToResponseDto(location: Location): LocationResponseDto {
+    const dv = (location as any).dataValues || {};
+    
+    // Calculate derived stats
+    const totalBeds = Number(dv.totalBeds ?? 0);
+    const occupiedBeds = Number(dv.occupiedBeds ?? 0);
+    const availableBeds = totalBeds - occupiedBeds;
+    const caregiverCount = Number(dv.caregiverCount ?? 0);
+    const careReceiverCount = Number(dv.careReceiverCount ?? 0);
+    const occupancyRate = totalBeds > 0 ? Math.round((occupiedBeds / totalBeds) * 100) : 0;
+  
     return {
       id: location.id,
       name: location.name,
@@ -265,9 +350,13 @@ export class LocationsService {
       settings: location.settings,
       createdAt: location.createdAt,
       updatedAt: location.updatedAt,
-      stats: (location as any).dataValues?.userCount !== undefined ? {
-        userCount: (location as any).dataValues.userCount,
-        patientCount: (location as any).dataValues.patientCount,
+      stats: dv.totalBeds !== undefined ? {
+        totalBeds,
+        occupiedBeds,
+        availableBeds,
+        caregiverCount,
+        careReceiverCount,
+        occupancyRate,
       } : undefined,
     };
   }

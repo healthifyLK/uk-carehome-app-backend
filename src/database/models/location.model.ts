@@ -86,6 +86,20 @@ export class Location extends BaseModel<Location> {
   capacity: number;
 
   @Column({
+    type:DataType.INTEGER,
+    allowNull:true,
+    comment:"Number of rooms"
+  })
+  numberOfRooms?:number;
+
+  @Column({
+    type:DataType.INTEGER,
+    allowNull:true,
+    comment:"Beds per room"
+  })
+  bedsPerRoom?:number;
+
+  @Column({
     type: DataType.BOOLEAN,
     defaultValue: true,
   })

@@ -63,7 +63,7 @@ export enum FundingSource {
       'medicalHistory', 
       'currentMedications',
       'allergies',
-      'emergencyContacts',
+      // 'emergencyContacts',
       'gpDetails',
       'legalGuardianDetails',
       'carePlanSummary',
@@ -291,12 +291,18 @@ export class CareReceiver extends BaseModel<CareReceiver> {
     comment: 'Encrypted emergency contacts',
     get() {
       const value = this.getDataValue('emergencyContacts');
-      return value ? JSON.parse(decryptField(value)) : [];
+      if (!value) return [];
+      try {
+        return JSON.parse(decryptField(value));
+      } catch (error) {
+        console.error('Failed to decrypt emergency contacts:', error);
+        return [];
+      }
     },
     set(value: any[]) {
       this.setDataValue(
         'emergencyContacts',
-        value ? encryptField(JSON.stringify(value)) : null
+        value && value.length > 0 ? encryptField(JSON.stringify(value)) : encryptField(JSON.stringify([]))
       );
     },
   })

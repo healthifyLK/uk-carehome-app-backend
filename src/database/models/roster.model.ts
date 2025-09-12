@@ -17,7 +17,6 @@ export enum ShiftType {
   AFTERNOON = 'AFTERNOON',
   NIGHT = 'NIGHT',
   FULL_DAY = 'FULL_DAY',
-  SPLIT_SHIFT = 'SPLIT_SHIFT',
 }
 
 export enum RosterStatus {
