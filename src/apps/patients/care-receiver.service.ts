@@ -5,14 +5,14 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { Transaction } from 'sequelize';
-import { CareReceiver } from '../../database/models/care-receiver.model.';
+import { CareReceiver } from '../../database/models/care-receiver.model';
 import { Location } from '../../database/models/location.model';
 import { RoomBed } from '../../database/models/room-bed.model';
 import { AuditLog } from '../../database/models/audit-log.model';
 import {
   CareReceiverRegistrationDto,
 } from './dto/care-receiver-registration.dto';
-import { CareLevel, CareReceiverStatus } from '../../database/models/care-receiver.model.';
+import { CareLevel, CareReceiverStatus } from '../../database/models/care-receiver.model';
 import { CareReceiverResponseDto } from './dto/care-receiver-response.dto';
 
 @Injectable()

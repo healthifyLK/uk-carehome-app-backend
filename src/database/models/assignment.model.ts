@@ -10,7 +10,7 @@ import {
   } from 'sequelize-typescript';
   import { BaseModel } from './base.model';
   import { User } from './user.model';
-  import { CareReceiver } from './care-receiver.model.';
+  import { CareReceiver } from './care-receiver.model';
   import { Schedule } from './schedule.model';
   
   export enum AssignmentType {

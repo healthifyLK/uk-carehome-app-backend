@@ -18,7 +18,7 @@ import {
   MobilityLevel, 
   MentalCapacityLevel, 
   FundingSource 
-} from '../../../database/models/care-receiver.model.';
+} from '../../../database/models/care-receiver.model';
 
 export class MedicationDto {
   @IsString()
