@@ -9,10 +9,11 @@ import { CareReceiver } from '../../database/models/care-receiver.model';
 import { Location } from '../../database/models/location.model';
 import { RoomBed } from '../../database/models/room-bed.model';
 import { AuditLog } from '../../database/models/audit-log.model';
+import { CareReceiverRegistrationDto } from './dto/care-receiver-registration.dto';
 import {
-  CareReceiverRegistrationDto,
-} from './dto/care-receiver-registration.dto';
-import { CareLevel, CareReceiverStatus } from '../../database/models/care-receiver.model';
+  CareLevel,
+  CareReceiverStatus,
+} from '../../database/models/care-receiver.model';
 import { CareReceiverResponseDto } from './dto/care-receiver-response.dto';
 
 @Injectable()
@@ -127,7 +128,9 @@ export class CareReceiversService {
     return this.mapToResponseDto(careReceiver);
   }
 
-  async getCareReceiverById(careReceiverId: string): Promise<CareReceiverResponseDto> {
+  async getCareReceiverById(
+    careReceiverId: string,
+  ): Promise<CareReceiverResponseDto> {
     const careReceiver = await this.careReceiverModel.findByPk(careReceiverId, {
       include: [
         { model: Location, as: 'location' },
@@ -142,7 +145,9 @@ export class CareReceiversService {
     return this.mapToResponseDto(careReceiver);
   }
 
-  async getAllCareReceivers(locationId?: string): Promise<CareReceiverResponseDto[]> {
+  async getAllCareReceivers(
+    locationId?: string,
+  ): Promise<CareReceiverResponseDto[]> {
     const whereClause = locationId ? { locationId } : {};
 
     const careReceivers = await this.careReceiverModel.findAll({
@@ -154,7 +159,9 @@ export class CareReceiversService {
       order: [['createdAt', 'DESC']],
     });
 
-    return careReceivers.map((careReceiver) => this.mapToResponseDto(careReceiver));
+    return careReceivers.map((careReceiver) =>
+      this.mapToResponseDto(careReceiver),
+    );
   }
 
   async updateCareReceiver(
@@ -166,7 +173,7 @@ export class CareReceiversService {
     if (!careReceiver) {
       throw new NotFoundException('Care receiver not found');
     }
-
+  
     // Handle room/bed changes
     if (updateData.currentRoomBedId !== careReceiver.currentRoomBedId) {
       // Free up old room/bed
@@ -176,7 +183,7 @@ export class CareReceiversService {
           { where: { id: careReceiver.currentRoomBedId } },
         );
       }
-
+  
       // Assign new room/bed
       if (updateData.currentRoomBedId) {
         const roomBed = await this.roomBedModel.findByPk(
@@ -188,29 +195,49 @@ export class CareReceiversService {
         if (roomBed.isOccupied) {
           throw new BadRequestException('Room/Bed is already occupied');
         }
-
+  
         await this.roomBedModel.update(
           { isOccupied: true },
           { where: { id: updateData.currentRoomBedId } },
         );
       }
     }
-
-    await careReceiver.update(updateData);
-
+  
+    // Clean update data - convert empty strings to null for enum fields
+    const cleanUpdateData: any = { ...updateData };
+  
+    // Convert empty strings to null for enum fields
+    Object.keys(cleanUpdateData).forEach(key => {
+      if (cleanUpdateData[key] === '') {
+        cleanUpdateData[key] = null;
+      }
+    });
+  
+    await careReceiver.update(cleanUpdateData);
+  
     // Audit log for update
     await this.auditLogModel.create({
       action: 'CARE_RECEIVER_UPDATE',
       entityType: 'CARE_RECEIVER',
       entityId: careReceiverId,
       userId: userId,
-      changes: {
-        operation: 'UPDATE',
-        changes: updateData,
-      },
+      changes: { updated: cleanUpdateData },
+      status: 'SUCCESS',
+      purpose: 'Care Receiver Management',
     });
-
-    return this.mapToResponseDto(careReceiver);
+  
+    // Return updated care receiver
+    const updatedCareReceiver = await this.careReceiverModel.findByPk(
+      careReceiverId,
+      {
+        include: [
+          { model: Location, as: 'location' },
+          { model: RoomBed, as: 'currentRoomBed' },
+        ],
+      },
+    );
+  
+    return this.mapToResponseDto(updatedCareReceiver);
   }
 
   async updateGdprConsent(
@@ -250,7 +277,10 @@ export class CareReceiversService {
     );
   }
 
-  async requestDataDeletion(careReceiverId: string, userId: string): Promise<void> {
+  async requestDataDeletion(
+    careReceiverId: string,
+    userId: string,
+  ): Promise<void> {
     const careReceiver = await this.careReceiverModel.findByPk(careReceiverId);
     if (!careReceiver) {
       throw new NotFoundException('Care receiver not found');
@@ -283,7 +313,10 @@ export class CareReceiversService {
     });
   }
 
-  async dischargeCareReceiver(careReceiverId: string, userId: string): Promise<void> {
+  async dischargeCareReceiver(
+    careReceiverId: string,
+    userId: string,
+  ): Promise<void> {
     const careReceiver = await this.careReceiverModel.findByPk(careReceiverId);
     if (!careReceiver) {
       throw new NotFoundException('Care receiver not found');
@@ -367,8 +400,8 @@ export class CareReceiversService {
       timestamp: new Date(),
     };
 
-    await careReceiver.update({ 
-      careLogs: [...currentLogs, newLog] 
+    await careReceiver.update({
+      careLogs: [...currentLogs, newLog],
     });
 
     // Audit log for care log addition
@@ -401,8 +434,8 @@ export class CareReceiversService {
       timestamp: new Date(),
     };
 
-    await careReceiver.update({ 
-      incidentReports: [...currentReports, newReport] 
+    await careReceiver.update({
+      incidentReports: [...currentReports, newReport],
     });
 
     // Audit log for incident report
@@ -418,9 +451,9 @@ export class CareReceiversService {
     });
   }
 
-  
-
-  private mapToResponseDto(careReceiver: CareReceiver): CareReceiverResponseDto {
+  private mapToResponseDto(
+    careReceiver: CareReceiver,
+  ): CareReceiverResponseDto {
     return {
       id: careReceiver.id,
       firstName: careReceiver.firstName,
