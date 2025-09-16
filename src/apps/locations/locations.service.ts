@@ -4,7 +4,7 @@ import { Transaction } from 'sequelize';
 import { literal, type ProjectionAlias } from 'sequelize';
 import { Location } from '../../database/models/location.model';
 import { User } from '../../database/models/user.model';
-import { CareReceiver } from '../../database/models/care-receiver.model.';
+import { CareReceiver } from '../../database/models/care-receiver.model';
 import { RoomBed } from '../../database/models/room-bed.model';
 import { AuditLog } from '../../database/models/audit-log.model';
 import { CreateLocationDto } from './dto/create-location.dto';
@@ -59,27 +59,31 @@ export class LocationsService {
       { transaction },
     );
 
-    // Auto-generate rooms/beds if requested
-    if (numberOfRooms > 0 && bedsPerRoom > 0) {
-      const beds: { roomNumber: string; bedNumber: string; locationId: string }[] = [];
-      const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-      for (let r = 1; r <= numberOfRooms; r++) {
-        const roomNumber = String(r).padStart(3, '0'); // 001, 002, ...
-        for (let b = 0; b < bedsPerRoom; b++) {
-          const letter = letters[b];
-          beds.push({
-            roomNumber,
-            bedNumber: `CH${roomNumber}${letter}`, // matches model hook/validation
-            locationId: location.id,
-          });
-        }
-      }
-      await this.roomBedModel.bulkCreate(beds as any, { transaction });
-    }
-
+    // // Auto-generate rooms/beds if requested
+    // if (numberOfRooms > 0 && bedsPerRoom > 0) {
+    //   const beds: { roomNumber: string; bedNumber: string; locationId: string }[] = [];
+    //   const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+      
+    //   // Use location ID prefix to make room numbers unique per location
+    //   const locationPrefix = location.id.substring(0, 3).toUpperCase();
+      
+    //   for (let r = 1; r <= numberOfRooms; r++) {
+    //     const roomNumber = `${locationPrefix}${String(r).padStart(3, '0')}`; // e.g., ABC001, ABC002
+    //     for (let b = 0; b < bedsPerRoom; b++) {
+    //       const letter = letters[b];
+    //       beds.push({
+    //         roomNumber,
+    //         bedNumber: `CH${roomNumber}${letter}`,
+    //         locationId: location.id,
+    //       });
+    //     }
+    //   }
+      
+    //   await this.roomBedModel.bulkCreate(beds as any, { transaction });
+    // }
     await this.auditLogModel.create(
       {
-        action: 'CREATE',
+        action: 'CREATE', 
         entityType: 'Location',
         entityId: location.id,
         userId: userId,

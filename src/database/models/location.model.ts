@@ -7,7 +7,7 @@ import {
 } from 'sequelize-typescript';
 import { BaseModel } from './base.model';
 import { User } from './user.model';
-import { CareReceiver } from './care-receiver.model.';
+import { CareReceiver } from './care-receiver.model';
 import { RoomBed } from './room-bed.model';
 import { fn, col } from 'sequelize';
 

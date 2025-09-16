@@ -9,7 +9,7 @@ import {
 } from 'sequelize-typescript';
 import { BaseModel } from './base.model';
 import { Location } from './location.model';
-import { CareReceiver } from './care-receiver.model.';
+import { CareReceiver } from './care-receiver.model';
 
 @Table({
   tableName: 'room_beds',
