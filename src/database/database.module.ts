@@ -11,6 +11,7 @@ import { Schedule } from './models/schedule.model';
 import { AuditLog } from './models/audit-log.model';
 import { Caregiver } from './models/caregiver.model';
 import { Roster } from './models/roster.model';
+import { LeaveRequest } from './models/leave-request.model';
 
 @Module({
   imports: [
@@ -18,7 +19,7 @@ import { Roster } from './models/roster.model';
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
         ...configService.get('database'),
-        models: [User, Location, CareReceiver, RoomBed, Assignment, Schedule,AuditLog, Caregiver,Roster],
+        models: [User, Location, CareReceiver, RoomBed, Assignment, Schedule,AuditLog, Caregiver,Roster,LeaveRequest],
         autoLoadModels: true,
         synchronize: process.env.NODE_ENV === 'development',
         logging: false, // Fix the deprecation warning

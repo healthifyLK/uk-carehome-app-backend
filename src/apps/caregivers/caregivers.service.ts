@@ -12,7 +12,7 @@ import {
   EmploymentType,
   CaregiverStatus,
 } from '../../database/models/caregiver.model';
-import { CaregiverRegistrationDto } from './dto/caregivers-registration.dto';
+import { AdminCaregiverRegistrationDto } from './dto/admin-caregiver-registration.dto';
 import { CaregiverResponseDto } from './dto/caregivers-response.dto';
 import { CareReceiverResponseDto } from '../patients/dto/care-receiver-response.dto';
 
@@ -28,7 +28,7 @@ export class CaregiversService {
   ) {}
 
   async registerCaregiver(
-    registrationData: CaregiverRegistrationDto,
+    registrationData: AdminCaregiverRegistrationDto,
     userId: string,
     transaction?: Transaction,
   ): Promise<CaregiverResponseDto> {
@@ -125,7 +125,7 @@ export class CaregiversService {
 
   async updateCaregiver(
     caregiverId: string,
-    updateData: Partial<CaregiverRegistrationDto>,
+    updateData: Partial<AdminCaregiverRegistrationDto>,
     userId: string,
   ): Promise<CaregiverResponseDto> {
     const caregiver = await this.caregiverModel.findByPk(caregiverId);
@@ -239,8 +239,6 @@ export class CaregiversService {
     });
   }
 
-  
-
   private async generateEmployeeId(): Promise<string> {
     const prefix = 'CG';
     const timestamp = Date.now().toString().slice(-6);
@@ -248,7 +246,7 @@ export class CaregiversService {
     return `${prefix}${timestamp}${random}`;
   }
 
-  private mapToResponseDto(caregiver: Caregiver): CaregiverResponseDto {
+  public mapToResponseDto(caregiver: Caregiver): CaregiverResponseDto {
     return {
       id: caregiver.id,
       firstName: caregiver.firstName,

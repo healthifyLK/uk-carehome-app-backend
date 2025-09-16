@@ -1,3 +1,4 @@
+// src/apps/caregivers/dto/admin-caregiver-registration.dto.ts
 import { 
     IsString, 
     IsDate, 
@@ -120,7 +121,7 @@ import {
     hasLegalAuthority: boolean;
   }
   
-  export class CaregiverRegistrationDto {
+  export class AdminCaregiverRegistrationDto {
     // Personal Information
     @IsString()
     @MinLength(2)
@@ -137,6 +138,7 @@ import {
   
     @IsString()
     @MinLength(8)
+    @MaxLength(100)
     password: string;
   
     @IsString()
@@ -156,7 +158,7 @@ import {
     // Employment Information
     @IsString()
     @IsOptional()
-    employeeId?: string; // If not provided, will be auto-generated
+    employeeId?: string;
   
     @IsUUID()
     locationId: string;
@@ -170,7 +172,7 @@ import {
   
     @IsEnum(ShiftPreference)
     shiftPreference: ShiftPreference;
-
+  
     @IsArray()
     @IsUUID('all', { each: true })
     @IsOptional()
@@ -207,7 +209,7 @@ import {
     @ValidateNested()
     @IsOptional()
     @Type(() => RightToWorkDocumentDto)
-    rightToWorkDocument: RightToWorkDocumentDto;
+    rightToWorkDocument?: RightToWorkDocumentDto;
   
     @ValidateNested()
     @Type(() => EmergencyContactDto)

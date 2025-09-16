@@ -12,6 +12,7 @@ import databaseConfig from './config/database.config';
 import { UsersModule } from './apps/users/users.module';
 import { CaregiversModule } from './apps/caregivers/caregivers.module';
 import { RostersModule } from './apps/rosters/rosters.module';
+import { LeavesModule } from './apps/leaves/leaves.module';
 
 @Module({
   imports: [
@@ -27,7 +28,8 @@ import { RostersModule } from './apps/rosters/rosters.module';
     RoomBedsModule,
     UsersModule,
     CaregiversModule,
-    RostersModule
+    RostersModule,
+    LeavesModule
   ],
   controllers: [AppController],
   providers: [AppService],

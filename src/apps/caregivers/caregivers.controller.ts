@@ -1,156 +1,119 @@
-import {
-    Controller,
-    Post,
-    Get,
-    Put,
-    Patch,
-    Body,
-    Param,
-    Query,
-    UseGuards,
-    Request,
-    HttpCode,
-    HttpStatus,
-  } from '@nestjs/common';
-  import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
-  import { AuthGuard } from '@nestjs/passport';
-  import { CaregiversService } from './caregivers.service';
-  import { CaregiverRegistrationDto } from './dto/caregivers-registration.dto';
-  import { CaregiverResponseDto } from './dto/caregivers-response.dto';
-  import { RolesGuard } from '../../common/guards/roles.guard';
-  import { Roles } from '../../common/decorators/roles.decorator';
-  import { UserRole } from '../../database/models/user.model';
-  import { CaregiverStatus } from '../../database/models/caregiver.model';
-import { CareReceiverResponseDto } from '../patients/dto/care-receiver-response.dto';
-import { CareReceiverRegistrationDto } from '../patients/dto/care-receiver-registration.dto';
-  
-  @ApiTags('Caregivers')
-  @Controller('caregivers')
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @ApiBearerAuth()
-  export class CaregiversController {
-    constructor(private readonly caregiversService: CaregiversService) {}
-  
-    @Post('register')
-    @HttpCode(HttpStatus.CREATED)
-    @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
-    @ApiOperation({ summary: 'Register a new caregiver with comprehensive data and GDPR compliance' })
-    @ApiResponse({
-      status: 201,
-      description: 'Caregiver registered successfully',
-      type: CaregiverResponseDto,
-    })
-    @ApiResponse({ status: 400, description: 'Bad request - validation failed' })
-    @ApiResponse({ status: 404, description: 'Location not found' })
-    async registerCaregiver(
-      @Body() registrationData: CaregiverRegistrationDto,
-      @Request() req,
-    ): Promise<CaregiverResponseDto> {
-      return this.caregiversService.registerCaregiver(
-        registrationData,
-        req.user.id,
-      );
-    }
-  
-    @Get()
-    @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CAREGIVER)
-    @ApiOperation({ summary: 'Get all caregivers' })
-    @ApiQuery({ name: 'locationId', required: false, description: 'Filter by location ID' })
-    @ApiResponse({
-      status: 200,
-      description: 'Caregivers retrieved successfully',
-      type: [CaregiverResponseDto],
-    })
-    async getAllCaregivers(
-      @Query('locationId') locationId?: string,
-    ): Promise<CaregiverResponseDto[]> {
-      return this.caregiversService.getAllCaregivers(locationId);
-    }
-  
-    @Get(':id')
-    @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.CAREGIVER)
-    @ApiOperation({ summary: 'Get caregiver details by ID' })
-    @ApiResponse({
-      status: 200,
-      description: 'Caregiver details retrieved successfully',
-      type: CaregiverResponseDto,
-    })
-    @ApiResponse({ status: 404, description: 'Caregiver not found' })
-    async getCaregiver(@Param('id') caregiverId: string): Promise<CaregiverResponseDto> {
-      return this.caregiversService.getCaregiverById(caregiverId);
-    }
-  
-    @Put(':id')
-    @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
-    @ApiOperation({ summary: 'Update caregiver information' })
-    @ApiResponse({
-      status: 200,
-      description: 'Caregiver updated successfully',
-      type: CaregiverResponseDto,
-    })
-    @ApiResponse({ status: 404, description: 'Caregiver not found' })
-    async updateCaregiver(
-      @Param('id') caregiverId: string,
-      @Body() updateData: Partial<CaregiverRegistrationDto>,
-      @Request() req,
-    ): Promise<CaregiverResponseDto> {
-      return this.caregiversService.updateCaregiver(
-        caregiverId,
-        updateData,
-        req.user.id,
-      );
-    }
-  
-    @Patch(':id/status')
-    @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
-    @ApiOperation({ summary: 'Update caregiver status' })
-    @ApiResponse({
-      status: 200,
-      description: 'Caregiver status updated successfully',
-      type: CaregiverResponseDto,
-    })
-    @ApiResponse({ status: 404, description: 'Caregiver not found' })
-    async updateStatus(
-      @Param('id') caregiverId: string,
-      @Body() body: { status: CaregiverStatus },
-      @Request() req,
-    ): Promise<CaregiverResponseDto> {
-      return this.caregiversService.updateStatus(
-        caregiverId,
-        body.status,
-        req.user.id,
-      );
-    }
-  
-    @Put(':id/certification')
-    @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
-    @ApiOperation({ summary: 'Update caregiver certifications' })
-    @ApiResponse({ status: 200, description: 'Certification updated successfully' })
-    @ApiResponse({ status: 404, description: 'Caregiver not found' })
-    async updateCertification(
-      @Param('id') caregiverId: string,
-      @Body() certificationData: any,
-      @Request() req,
-    ): Promise<void> {
-      return this.caregiversService.updateCertification(
-        caregiverId,
-        certificationData,
-        req.user.id,
-      );
-    }
-  
-    @Post(':id/request-deletion')
-    @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
-    @ApiOperation({ summary: 'Request data deletion for GDPR compliance' })
-    @ApiResponse({ status: 200, description: 'Deletion request submitted' })
-    @ApiResponse({ status: 404, description: 'Caregiver not found' })
-    async requestDataDeletion(
-      @Param('id') caregiverId: string,
-      @Request() req,
-    ): Promise<void> {
-      return this.caregiversService.requestDataDeletion(
-        caregiverId,
-        req.user.id,
-      );
-    }
+// src/apps/caregivers/caregivers.controller.ts
+import { 
+  Controller, 
+  Get, 
+  Post, 
+  Put, 
+  Param, 
+  Body, 
+  UseGuards,
+  Patch,
+  Req
+} from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { AuthGuard } from '@nestjs/passport';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { LocationAccessGuard } from '../../common/guards/location-access.guard';
+import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { UserRole } from '../../database/models/user.model';
+import { CaregiversService } from './caregivers.service';
+import { CaregiverAuthService } from '../auth/caregiver-auth.service';
+import { AdminCaregiverRegistrationDto } from './dto/admin-caregiver-registration.dto';
+import { CaregiverResponseDto } from './dto/caregivers-response.dto';
+import { CaregiverStatus } from '../../database/models/caregiver.model';
+
+@ApiTags('Caregivers')
+@Controller('caregivers')
+@UseGuards(AuthGuard('jwt'), RolesGuard)
+@ApiBearerAuth()
+export class CaregiversController {
+  constructor(
+    private readonly caregiversService: CaregiversService,
+    private readonly caregiverAuthService: CaregiverAuthService,
+  ) {}
+
+  @Post('register')
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @ApiOperation({ summary: 'Register a new caregiver (Admin only)' })
+  @ApiResponse({ status: 201, description: 'Caregiver registered successfully', type: CaregiverResponseDto })
+  async registerCaregiver(
+    @Body() registrationDto: AdminCaregiverRegistrationDto,
+    @CurrentUser() user: any,
+  ): Promise<CaregiverResponseDto> {
+    const caregiver = await this.caregiverAuthService.registerCaregiver(
+      registrationDto,
+      user.id,
+    );
+    return this.caregiversService.getCaregiverById(caregiver.id);
   }
+
+  @Get()
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @ApiOperation({ summary: 'Get all caregivers' })
+  async getAllCaregivers(@Req() req: any): Promise<CaregiverResponseDto[]> {
+    return this.caregiversService.getAllCaregivers(req.user.locationId);
+  }
+
+  @Get(':id')
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @ApiOperation({ summary: 'Get caregiver by ID' })
+  async getCaregiverById(@Param('id') id: string): Promise<CaregiverResponseDto> {
+    return this.caregiversService.getCaregiverById(id);
+  }
+
+  @Put(':id')
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @ApiOperation({ summary: 'Update caregiver' })
+  async updateCaregiver(
+    @Param('id') id: string,
+    @Body() updateData: Partial<AdminCaregiverRegistrationDto>,
+    @CurrentUser() user: any,
+  ): Promise<CaregiverResponseDto> {
+    return this.caregiversService.updateCaregiver(id, updateData, user.id);
+  }
+
+  @Patch(':id/status')
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @ApiOperation({ summary: 'Update caregiver status' })
+  async updateStatus(
+    @Param('id') id: string,
+    @Body() body: { status: CaregiverStatus },
+    @CurrentUser() user: any,
+  ): Promise<CaregiverResponseDto> {
+    return this.caregiversService.updateStatus(id, body.status, user.id);
+  }
+
+  @Put(':id/certification')
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @ApiOperation({ summary: 'Update caregiver certification' })
+  async updateCertification(
+    @Param('id') id: string,
+    @Body() certificationData: any,
+    @CurrentUser() user: any,
+  ): Promise<void> {
+    return this.caregiversService.updateCertification(id, certificationData, user.id);
+  }
+
+  @Post(':id/request-deletion')
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @ApiOperation({ summary: 'Request caregiver data deletion' })
+  async requestDataDeletion(
+    @Param('id') id: string,
+    @CurrentUser() user: any,
+  ): Promise<void> {
+    return this.caregiversService.requestDataDeletion(id, user.id);
+  }
+
+  @Post(':id/reset-password')
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @ApiOperation({ summary: 'Reset caregiver password (Admin only)' })
+  async resetPassword(
+    @Param('id') id: string,
+    @Body() body: { newPassword: string },
+    @CurrentUser() user: any,
+  ): Promise<{ message: string }> {
+    await this.caregiverAuthService.resetPassword(id, body.newPassword, user.id);
+    return { message: 'Password reset successfully' };
+  }
+}

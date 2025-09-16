@@ -7,3 +7,4 @@ export { Schedule } from './schedule.model';
 export { AuditLog } from './audit-log.model';
 export {Caregiver} from './caregiver.model';
 export {Roster} from './roster.model';
+import { LeaveRequest } from './leave-request.model';
